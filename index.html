@@ -269,24 +269,15 @@
         "Modulo 4": "L'autista dei Mezzi di Soccorso",
         "Modulo 5": "Prima di Partire",
         "Modulo 6": "Ruolo, Funzioni e Comportamento",
-        "Modulo 7": "Posizionamento del Veicolo",
-        "Modulo 8": "Gestione della Scena",
+        "Modulo 7-8": "Posizionamento del Veicolo e Gestione della Scena",
         "Miste": "Mix Operativo",
         "Segnali stradali": "Segnaletica e precedenze"
     };
 
     const moduleDescriptions = {
-        "all": "<strong>Simulazione Completa ed Equa:</strong> Il sistema seleziona automaticamente <strong>3 domande per ogni argomento</strong> (inclusa la categoria Miste e Segnali), per un totale di 30 domande ben distribuite.",
-        "hardest": "<strong>Ripasso Mirato:</strong> Questa modalità analizza i tuoi errori passati e ti propone prioritariamente le domande che hai sbagliato più spesso. Se non hai storico, userà domande casuali.",
-        "Modulo 2": "<strong>Normativa:</strong> Responsabilità civile, penale e amministrativa del conducente CRI. Coperture assicurative, comportamento in caso di sinistro e uso legittimo dei mezzi.",
-        "Modulo 3": "<strong>Norme di Comportamento dell'Autista:</strong> Norme di circolazione, segnaletica, precedenze. Focus sull'Art. 177 C.d.S., uso dei dispositivi acustici/luminosi (sirena e lampeggianti) e guida in emergenza.",
-        "Modulo 4": "<strong>L'autista dei Mezzi di Soccorso:</strong> Sicurezza e comfort del paziente, gestione dell'equipaggio, comunicazioni radio, pianificazione itinerario e trasporto sanitario.",
-        "Modulo 5": "<strong>Il Prima di Partire:</strong> Controlli pre-partenza, manutenzione ordinaria, verifica livelli (olio, freni), riconoscimento anomalie meccaniche e gestione avarie.",
-        "Modulo 6": "<strong>Ruolo, Funzioni e Comportamento:</strong> Fisica del veicolo, aderenza, forze in curva, guida in condizioni meteo avverse (pioggia, neve, nebbia) e dinamica del mezzo pesante.",
-        "Modulo 7": "<strong>Posizionamento del Veicolo:</strong> Posizionamento tattico del mezzo sul luogo dell'evento, protezione della scena, sicurezza dell'equipaggio e del paziente.",
-        "Modulo 8": "<strong>Gestione della Scena:</strong> Gestione di scenari complessi, merci pericolose (ADR), rischio incendio, interazione con Vigili del Fuoco e Forze dell'Ordine.",
-        "Miste": "<strong>Mix Operativo:</strong> Una selezione di domande trasversali che toccano vari aspetti operativi e pratici dell'attività di autista soccorritore.",
-        "Segnali stradali": "<strong>Segnaletica stradale:</strong> Segnali verticali, regole di precedenza, incroci e situazioni tipiche d'esame."
+        "all": "<strong>Simulazione Completa ed Equa:</strong> 3 domande per ogni argomento con riempimento automatico fino a 30.",
+        "hardest": "<strong>Ripasso Mirato:</strong> Domande più sbagliate.",
+        "Modulo 7-8": "<strong>Posizionamento del Veicolo e Gestione della Scena</strong>"
     };
 
     let timerInterval;
@@ -295,52 +286,56 @@
     function init() {
         const lines = csvData.trim().split("\n");
 
-        allQuestions = lines
-            .map(line => {
-                const parts = line.split("|");
-                if (parts.length < 3) return null;
+        allQuestions = lines.map(line => {
+            const parts = line.split("|");
+            if (parts.length < 3) return null;
 
-                const topic = parts[0].trim();
+            let topic = parts[0].trim();
 
-                let title = "";
-                let rawQuestion = "";
-                let answerPart = "";
+            // 🔧 MOD 1 — accorpa Modulo 7 e 8
+            if (topic === "Modulo 7" || topic === "Modulo 8") {
+                topic = "Modulo 7-8";
+            }
 
-                if (parts.length === 4) {
-                    title = parts[1].trim();
-                    rawQuestion = parts[2].trim();
-                    answerPart = parts[3].trim();
-                } else {
-                    rawQuestion = parts[1].trim();
-                    answerPart = parts[2].trim();
+            let title = "";
+            let rawQuestion = "";
+            let answerPart = "";
+
+            if (parts.length === 4) {
+                title = parts[1].trim();
+                rawQuestion = parts[2].trim();
+                answerPart = parts[3].trim();
+            } else {
+                rawQuestion = parts[1].trim();
+                answerPart = parts[2].trim();
+            }
+
+            let image = null;
+            const imgTag = "[img=";
+            const imgStart = rawQuestion.indexOf(imgTag);
+            if (imgStart !== -1) {
+                const after = rawQuestion.substring(imgStart + imgTag.length);
+                const end = after.indexOf("]");
+                if (end !== -1) {
+                    image = after.substring(0, end).trim();
+                    rawQuestion = rawQuestion.substring(0, imgStart).trim();
                 }
+            }
 
-                let image = null;
-                const imgTag = "[img=";
-                const imgStart = rawQuestion.indexOf(imgTag);
-                if (imgStart !== -1) {
-                    const after = rawQuestion.substring(imgStart + imgTag.length);
-                    const end = after.indexOf("]");
-                    if (end !== -1) {
-                        image = after.substring(0, end).trim();
-                        rawQuestion = rawQuestion.substring(0, imgStart).trim();
-                    }
-                }
+            const isTrue = answerPart.toUpperCase().includes("V");
 
-                const isTrue = answerPart.toUpperCase().includes("V");
-
-                return { topic, title, question: rawQuestion, isTrue, image };
-            })
-            .filter(item => item);
+            return { topic, title, question: rawQuestion, isTrue, image };
+        }).filter(q => q);
 
         const uniqueTopics = [...new Set(allQuestions.map(q => q.topic))].sort();
         const select = document.getElementById("topic-select");
+
         uniqueTopics.forEach(topic => {
             const option = document.createElement("option");
             option.value = topic;
-            let label = topic;
-            if (moduleTitles[topic]) label = `${topic} - ${moduleTitles[topic]}`;
-            option.innerText = label;
+            option.innerText = moduleTitles[topic]
+                ? `${topic} - ${moduleTitles[topic]}`
+                : topic;
             select.appendChild(option);
         });
 
@@ -348,98 +343,59 @@
         document.getElementById("btn-container").classList.remove("hide");
     }
 
-    function updateDescription() {
-        const select = document.getElementById('topic-select');
-        const descBox = document.getElementById('module-desc');
-        const banner = document.getElementById('hardest-banner');
-        
-        const selectedValue = select.value;
-        const text = moduleDescriptions[selectedValue] || "Descrizione non disponibile per questo modulo.";
-        descBox.innerHTML = text;
-
-        if (selectedValue === 'hardest') {
-            banner.classList.remove('hide');
-        } else {
-            banner.classList.add('hide');
-        }
-    }
-
     function startQuiz() {
         const selectedTopic = document.getElementById('topic-select').value;
-        
-        if (activeQuestions.length === 0 || currentBatchIndex >= activeQuestions.length || selectedTopic === 'hardest' || selectedTopic === 'all') {
-            if (selectedTopic === 'all') {
-                // LOGICA AGGIORNATA: 3 domande per ogni topic, escluso "hardest" che non è un topic del CSV.
-                activeQuestions = [];
-                // Ottengo tutti i topic unici dal CSV (es. Modulo 1, Modulo 2... Miste, Segnali)
-                const distinctTopics = [...new Set(allQuestions.map(q => q.topic))];
 
-                // Per ogni topic, prelevo esattamente 3 domande
-                distinctTopics.forEach(topic => {
-                    let topicQuestions = allQuestions.filter(q => q.topic === topic);
-                    // Mischio le domande di quel topic
-                    topicQuestions.sort(() => Math.random() - 0.5);
-                    // Ne prendo 3 e le aggiungo alla lista attiva
-                    activeQuestions.push(...topicQuestions.slice(0, 3));
-                });
+        if (selectedTopic === 'all') {
+            activeQuestions = [];
 
-                // Mischio l'intera lista generata (che dovrebbe essere di 30 domande se ci sono 10 topic)
-                activeQuestions.sort(() => Math.random() - 0.5);
-                
-                // Taglio a 30 per sicurezza assoluta
-                activeQuestions = activeQuestions.slice(0, 30);
+            const distinctTopics = [...new Set(allQuestions.map(q => q.topic))];
 
-            } else if (selectedTopic === 'hardest') {
-                let stats = JSON.parse(localStorage.getItem('cri_quiz_stats') || '{}');
-                let scoredQuestions = allQuestions.map(q => {
-                    let key = q.question.trim();
-                    let s = stats[key] || { wrong: 0, total: 0 };
-                    let errorRate = s.total > 0 ? (s.wrong / s.total) : 0;
-                    return { ...q, errorRate: errorRate, wrongCount: s.wrong };
-                });
-                scoredQuestions.sort((a, b) => {
-                    if (b.errorRate !== a.errorRate) return b.errorRate - a.errorRate;
-                    return b.wrongCount - a.wrongCount;
-                });
-                let topHardest = scoredQuestions.slice(0, 50);
-                topHardest.sort(() => Math.random() - 0.5);
-                activeQuestions = topHardest;
-                
-                if (activeQuestions.length === 0) {
-                    alert("Non ci sono ancora dati sufficienti sugli errori. Fai prima qualche test normale!");
-                    activeQuestions = [...allQuestions].sort(() => Math.random() - 0.5);
-                }
-            } else {
-                activeQuestions = allQuestions.filter(q => q.topic === selectedTopic);
-                activeQuestions.sort(() => Math.random() - 0.5);
+            distinctTopics.forEach(topic => {
+                let topicQuestions = allQuestions.filter(q => q.topic === topic);
+                topicQuestions.sort(() => Math.random() - 0.5);
+                activeQuestions.push(...topicQuestions.slice(0, 3));
+            });
+
+            // 🔧 MOD 2 — riempi fino a 30
+            if (activeQuestions.length < 30) {
+                let remaining = allQuestions.filter(q => !activeQuestions.includes(q));
+                remaining.sort(() => Math.random() - 0.5);
+                activeQuestions.push(...remaining.slice(0, 30 - activeQuestions.length));
             }
-            
-            currentBatchIndex = 0;
-        }
-        
-        if(activeQuestions.length === 0) {
-            alert("Nessuna domanda trovata.");
-            return;
+
+            activeQuestions.sort(() => Math.random() - 0.5);
+        } 
+        else if (selectedTopic === 'hardest') {
+            let stats = JSON.parse(localStorage.getItem('cri_quiz_stats') || '{}');
+            let scoredQuestions = allQuestions.map(q => {
+                let key = q.question.trim();
+                let s = stats[key] || { wrong: 0, total: 0 };
+                let errorRate = s.total > 0 ? (s.wrong / s.total) : 0;
+                return { ...q, errorRate: errorRate, wrongCount: s.wrong };
+            });
+
+            scoredQuestions.sort((a, b) =>
+                b.errorRate !== a.errorRate
+                    ? b.errorRate - a.errorRate
+                    : b.wrongCount - a.wrongCount
+            );
+
+            activeQuestions = scoredQuestions.slice(0, 50).sort(() => Math.random() - 0.5);
+        } 
+        else {
+            activeQuestions = allQuestions
+                .filter(q => q.topic === selectedTopic)
+                .sort(() => Math.random() - 0.5);
         }
 
-        let displayTitle = selectedTopic;
-        if(selectedTopic === 'all') displayTitle = "DOMANDE RANDOM (3 per Modulo)";
-        else if(selectedTopic === 'hardest') displayTitle = "LE PIÙ DIFFICILI";
-        else if(moduleTitles[selectedTopic]) displayTitle = `${selectedTopic} - ${moduleTitles[selectedTopic]}`;
-
-        document.getElementById('topic-display').innerText = displayTitle.toUpperCase();
-        
-        batchScore = 0;
+        currentBatchIndex = 0;
         currentQuestionInBatch = 0;
+        batchScore = 0;
         batchResults = [];
 
         document.getElementById('start-screen').classList.add('hide');
-        document.getElementById('result-screen').classList.add('hide');
-        document.getElementById('leaderboard-screen').classList.add('hide');
         document.getElementById('quiz-screen').classList.remove('hide');
-        document.getElementById('stats-box').classList.add('hide');
-        document.querySelector('.author-tag').classList.add('hide'); 
-        
         startTimer();
         showQuestion();
     }
