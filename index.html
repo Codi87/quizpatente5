@@ -159,7 +159,7 @@
     <p>Seleziona il modulo per il test:</p>
     
     <select id="topic-select" onchange="updateDescription()">
-        <option value="all">Domande Random (Equamente distribuite)</option>
+        <option value="all">Domande Random (3 per ogni argomento)</option>
         <option value="hardest" style="font-weight:bold; color:#d9534f;">⚠️ LE PIÙ DIFFICILI (Ripasso Errori)</option>
     </select>
 
@@ -185,9 +185,6 @@
         IL SEGUENTE QUIZ DI SIMULAZIONE D'ESAME PER LA PATENTE CAT 5 CROCE ROSSA ITALIANA È ESPLICATIVO E LE DOMANDE UFFICIALI DURANTE LA SESSIONE D'ESAME POSSONO AVERE DELLE VARIAZIONI
     </div>
     
-    <div class="blue-notice">
-        SONO PRESENTI ANCHE LE DOMANDE CON LA SEGNALETICA STRADALE
-    </div>
 </div>
 
 <div class="author-tag">
@@ -267,29 +264,27 @@
     const PASS_THRESHOLD = 27;
 
     const moduleTitles = {
-        "Modulo 1": "Associazione e Principi",
-        "Modulo 2": "Normativa e Responsabilità",
-        "Modulo 3": "Codice della Strada",
-        "Modulo 4": "Il Viaggio",
-        "Modulo 5": "Il Veicolo",
-        "Modulo 6": "Tecniche di Guida",
-        "Modulo 7": "Scenario e Sicurezza",
-        "Modulo 8": "Rischi Specifici",
+        "Modulo 2": "Normativa",
+        "Modulo 3": "Norme di Comportamento dell'Autista",
+        "Modulo 4": "L'autista dei Mezzi di Soccorso",
+        "Modulo 5": "Prima di Partire",
+        "Modulo 6": "Ruolo, Funzioni e Comportamento",
+        "Modulo 7": "Posizionamento del Veicolo",
+        "Modulo 8": "Gestione della Scena",
         "Miste": "Mix Operativo",
         "Segnali stradali": "Segnaletica e precedenze"
     };
 
     const moduleDescriptions = {
-        "all": "<strong>Simulazione Completa ed Equa:</strong> Il sistema seleziona automaticamente <strong>3 domande per ogni argomento</strong> (inclusa la categoria Miste), e completa la scheda con domande casuali per arrivare a 30.",
+        "all": "<strong>Simulazione Completa ed Equa:</strong> Il sistema seleziona automaticamente <strong>3 domande per ogni argomento</strong> (inclusa la categoria Miste e Segnali), per un totale di 30 domande ben distribuite.",
         "hardest": "<strong>Ripasso Mirato:</strong> Questa modalità analizza i tuoi errori passati e ti propone prioritariamente le domande che hai sbagliato più spesso. Se non hai storico, userà domande casuali.",
-        "Modulo 1": "<strong>Associazione e Principi:</strong> Storia della Croce Rossa, i 7 Principi Fondamentali, Diritto Internazionale Umanitario, uso dell'Emblema e struttura dell'Associazione.",
-        "Modulo 2": "<strong>Normativa e Responsabilità:</strong> Responsabilità civile, penale e amministrativa del conducente CRI. Coperture assicurative, comportamento in caso di sinistro e uso legittimo dei mezzi.",
-        "Modulo 3": "<strong>Codice della Strada:</strong> Norme di circolazione, segnaletica, precedenze. Focus sull'Art. 177 C.d.S., uso dei dispositivi acustici/luminosi (sirena e lampeggianti) e guida in emergenza.",
-        "Modulo 4": "<strong>Il Viaggio:</strong> Sicurezza e comfort del paziente, gestione dell'equipaggio, comunicazioni radio, pianificazione itinerario e trasporto sanitario.",
-        "Modulo 5": "<strong>Il Veicolo:</strong> Controlli pre-partenza, manutenzione ordinaria, verifica livelli (olio, freni), riconoscimento anomalie meccaniche e gestione avarie.",
-        "Modulo 6": "<strong>Tecniche di Guida:</strong> Fisica del veicolo, aderenza, forze in curva, guida in condizioni meteo avverse (pioggia, neve, nebbia) e dinamica del mezzo pesante.",
-        "Modulo 7": "<strong>Scenario e Sicurezza:</strong> Posizionamento tattico del mezzo sul luogo dell'evento, protezione della scena, sicurezza dell'equipaggio e del paziente.",
-        "Modulo 8": "<strong>Rischi Specifici:</strong> Gestione di scenari complessi, merci pericolose (ADR), rischio incendio, interazione con Vigili del Fuoco e Forze dell'Ordine.",
+        "Modulo 2": "<strong>Normativa:</strong> Responsabilità civile, penale e amministrativa del conducente CRI. Coperture assicurative, comportamento in caso di sinistro e uso legittimo dei mezzi.",
+        "Modulo 3": "<strong>Norme di Comportamento dell'Autista:</strong> Norme di circolazione, segnaletica, precedenze. Focus sull'Art. 177 C.d.S., uso dei dispositivi acustici/luminosi (sirena e lampeggianti) e guida in emergenza.",
+        "Modulo 4": "<strong>L'autista dei Mezzi di Soccorso:</strong> Sicurezza e comfort del paziente, gestione dell'equipaggio, comunicazioni radio, pianificazione itinerario e trasporto sanitario.",
+        "Modulo 5": "<strong>Il Prima di Partire:</strong> Controlli pre-partenza, manutenzione ordinaria, verifica livelli (olio, freni), riconoscimento anomalie meccaniche e gestione avarie.",
+        "Modulo 6": "<strong>Ruolo, Funzioni e Comportamento:</strong> Fisica del veicolo, aderenza, forze in curva, guida in condizioni meteo avverse (pioggia, neve, nebbia) e dinamica del mezzo pesante.",
+        "Modulo 7": "<strong>Posizionamento del Veicolo:</strong> Posizionamento tattico del mezzo sul luogo dell'evento, protezione della scena, sicurezza dell'equipaggio e del paziente.",
+        "Modulo 8": "<strong>Gestione della Scena:</strong> Gestione di scenari complessi, merci pericolose (ADR), rischio incendio, interazione con Vigili del Fuoco e Forze dell'Ordine.",
         "Miste": "<strong>Mix Operativo:</strong> Una selezione di domande trasversali che toccano vari aspetti operativi e pratici dell'attività di autista soccorritore.",
         "Segnali stradali": "<strong>Segnaletica stradale:</strong> Segnali verticali, regole di precedenza, incroci e situazioni tipiche d'esame."
     };
@@ -374,24 +369,26 @@
         
         if (activeQuestions.length === 0 || currentBatchIndex >= activeQuestions.length || selectedTopic === 'hardest' || selectedTopic === 'all') {
             if (selectedTopic === 'all') {
+                // LOGICA AGGIORNATA: 3 domande per ogni topic, escluso "hardest" che non è un topic del CSV.
                 activeQuestions = [];
+                // Ottengo tutti i topic unici dal CSV (es. Modulo 1, Modulo 2... Miste, Segnali)
                 const distinctTopics = [...new Set(allQuestions.map(q => q.topic))];
 
+                // Per ogni topic, prelevo esattamente 3 domande
                 distinctTopics.forEach(topic => {
                     let topicQuestions = allQuestions.filter(q => q.topic === topic);
+                    // Mischio le domande di quel topic
                     topicQuestions.sort(() => Math.random() - 0.5);
+                    // Ne prendo 3 e le aggiungo alla lista attiva
                     activeQuestions.push(...topicQuestions.slice(0, 3));
                 });
 
-                while (activeQuestions.length < 30) {
-                    let randomQ = allQuestions[Math.floor(Math.random() * allQuestions.length)];
-                    if (!activeQuestions.includes(randomQ)) {
-                        activeQuestions.push(randomQ);
-                    }
-                }
-                
+                // Mischio l'intera lista generata (che dovrebbe essere di 30 domande se ci sono 10 topic)
                 activeQuestions.sort(() => Math.random() - 0.5);
+                
+                // Taglio a 30 per sicurezza assoluta
                 activeQuestions = activeQuestions.slice(0, 30);
+
             } else if (selectedTopic === 'hardest') {
                 let stats = JSON.parse(localStorage.getItem('cri_quiz_stats') || '{}');
                 let scoredQuestions = allQuestions.map(q => {
@@ -426,7 +423,7 @@
         }
 
         let displayTitle = selectedTopic;
-        if(selectedTopic === 'all') displayTitle = "DOMANDE RANDOM";
+        if(selectedTopic === 'all') displayTitle = "DOMANDE RANDOM (3 per Modulo)";
         else if(selectedTopic === 'hardest') displayTitle = "LE PIÙ DIFFICILI";
         else if(moduleTitles[selectedTopic]) displayTitle = `${selectedTopic} - ${moduleTitles[selectedTopic]}`;
 
@@ -1472,4 +1469,3 @@ Segnali stradali|SECONDO LE NORME DI PRECEDENZA NELL’INCROCIO RAPPRESENTATO IN
 </script>
 </body>
 </html>
-
